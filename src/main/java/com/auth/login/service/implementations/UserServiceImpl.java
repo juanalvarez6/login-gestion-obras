@@ -3,6 +3,9 @@ package com.auth.login.service.implementations;
 import com.auth.login.model.entities.User;
 import com.auth.login.model.enums.RoleType;
 import com.auth.login.model.repository.UserRepository;
+import com.auth.login.web.dto.RegisterUserDto;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -25,6 +28,31 @@ public class UserServiceImpl {
 
     public List<User> getUsersByRole(RoleType role) {
         return userRepository.findByRole(role);
+    }
+
+    public User updateUser(Integer userId, RegisterUserDto updatedUserDto) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        User currentUser = (User) authentication.getPrincipal();
+
+        User existingUser = userRepository.findById(userId)
+                .orElseThrow(() -> new RuntimeException("Usuario no encontrado"));
+
+        boolean isAdmin = currentUser.getRole() == RoleType.ADMINISTRADOR;
+        boolean isSelf = currentUser.getId().equals(userId);
+
+        if (!isAdmin && !isSelf) {
+            throw new RuntimeException("No tiene permisos para actualizar este usuario");
+        }
+
+        existingUser.setFullName(updatedUserDto.getFullName());
+        existingUser.setEmail(updatedUserDto.getEmail());
+        existingUser.setNumberID(updatedUserDto.getNumberID());
+
+        if (isAdmin) {
+            existingUser.setRole(updatedUserDto.getRole());
+        }
+
+        return userRepository.save(existingUser);
     }
 
     public List<User> obtenerUsuariosPorAdmin(Integer adminId) {

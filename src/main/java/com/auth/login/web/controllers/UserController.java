@@ -8,6 +8,7 @@ import com.auth.login.model.entities.User;
 import com.auth.login.model.enums.RoleType;
 import com.auth.login.service.implementations.AuthenticationServiceImpl;
 import com.auth.login.service.implementations.UserServiceImpl;
+import com.auth.login.web.dto.RegisterUserDto;
 import com.auth.login.web.dto.UserResponseDto;
 import com.auth.login.web.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.security.SecurityRequirement;
@@ -115,6 +116,16 @@ public class UserController {
                 .map(userMapper::userToUserResponseDto)
                 .toList();
         return ResponseEntity.ok(response);
+    }
+
+    @SecurityRequirement(name = "bearerAuth")
+    @PutMapping("/{id}")
+    public ResponseEntity<UserResponseDto> updateUser(
+            @PathVariable Integer id,
+            @RequestBody RegisterUserDto updatedUserDto) {
+        User updatedUser = userService.updateUser(id, updatedUserDto);
+        UserResponseDto responseDto = userMapper.userToUserResponseDto(updatedUser);
+        return ResponseEntity.ok(responseDto);
     }
 }
 
